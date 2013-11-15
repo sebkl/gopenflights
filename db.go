@@ -17,15 +17,18 @@ import(
 const (
 	DefaultAirportDatUrl = "http://sourceforge.net/p/openflights/code/HEAD/tree/openflights/data/airports.dat?format=raw"
 	DefaultRoutesDatUrl = "http://sourceforge.net/p/openflights/code/HEAD/tree/openflights/data/routes.dat?format=raw"
+	DefaultAirlineDatUrl = "http://sourceforge.net/p/openflights/code/HEAD/tree/openflights/data/airlines.dat?format=raw"
 )
 
 // Database is an openflights database container.
 type Database struct {
 	Routes []RouteRecord
 	Airports []AirportRecord
+	Airlines []AirlineRecord
 	AirportsByIdIndex map[int]*AirportRecord
 	AirportsByIATA map[string]*AirportRecord
 	AirportsByICAO map[string]*AirportRecord
+	AirlinesByIdIndex map[int]*AirlineRecord
 }
 
 type Record interface {
@@ -46,6 +49,13 @@ type AirportRecord struct {
 	SourceRoutes map[*RouteRecord]bool
 }
 
+// AirlineRecord represents an airline object.
+type AirlineRecord struct {
+	Id int
+	Name,Alias,IATA,ICAO,Callsign,Country string
+	Active bool
+}
+
 // RouteRecord represents a route object.
 type RouteRecord struct {
 	Airline string
@@ -61,20 +71,24 @@ type RouteRecord struct {
 	//references
 	DestAirportP *AirportRecord
 	SourceAirportP *AirportRecord
+	AirlineP *AirlineRecord
 }
 
 // NewDatabase initializes a new openflights database.
 // If no parameter are given, the source files are loaded via http from sourceforge. 
-// Otherwise first parameter is the "airport.dat" and second the "routes.dat" file.
+// Otherwise first parameter is the "airport.dat", second the "routes.dat" and third
+// the "airline.dat" file.
 func NewDatabase(s...string) (db *Database) {
 	db = new(Database)
 	sl := len(s)
 
 	if sl == 0 {
 		db.LoadAirportData(DefaultAirportDatUrl)
+		db.LoadAirlineData(DefaultAirlineDatUrl)
 		db.LoadRouteData(DefaultRoutesDatUrl)
-	} else if sl == 2 {
+	} else if sl == 3 {
 		db.LoadAirportData(s[0])
+		db.LoadAirlineData(s[2])
 		db.LoadRouteData(s[1])
 	} else {
 		panic("Invalid initialization parameter. Either none or all source files must be specified.")
@@ -103,6 +117,31 @@ func (r *RouteRecord) Convert(s []string) error{
 	}
 	r.Stops,ret = strconv.Atoi(s[7])
 	r.Equipment = s[8]
+	return ret
+}
+
+// Convert converts a string array read from the corresponding "airline.dat" csv file into the given AirlineRecord object.
+func (r *AirlineRecord) Convert(s []string) error{
+	l := len(s)
+	if l < 8 {
+		return fmt.Errorf("Invalid field count for Airline record: %d/%d",l,8)
+	}
+
+	var ret error
+	r.Id,ret = strconv.Atoi(s[0])
+	r.Name = s[1]
+	r.Alias = s[2]
+	r.IATA = s[3]
+	r.ICAO = s[4]
+	r.Callsign = s[5]
+	r.Country = s[6]
+
+	csb := []byte(s[7])
+	if len(csb) > 0 {
+		r.Active = (csb[0] == 'Y')
+	} else {
+		r.Active = false
+	}
 	return ret
 }
 
@@ -179,6 +218,23 @@ func (d *Database) LoadAirportData(source string){
 	}
 }
 
+// LoadAirlineDate reads the airline data from the given source.
+// The source could be either a localfile or http based URL.
+func (d *Database) LoadAirlineData(source string) {
+	log.Printf("Loading Airline data.")
+	data := loadCsv(source)
+	d.Airlines =  make([]AirlineRecord,len(data))
+	d.AirlinesByIdIndex = make(map[int]*AirlineRecord)
+	for i,v := range data {
+		err := d.Airlines[i].Convert(v)
+		if (err != nil) {
+			log.Printf("Cannot convert AirlineRecord: %s",err.Error())
+		} else {
+			d.AirlinesByIdIndex[d.Airlines[i].Id] = &d.Airlines[i]
+		}
+	}
+}
+
 // LoadRouteData reads the route data from the given source.
 // The source could be either a localfile or http based URL.
 func (d *Database) LoadRouteData(source string) {
@@ -199,6 +255,8 @@ func (d *Database) LoadRouteData(source string) {
 			idx++
 			route.DestAirportP = d.AirportsByIdIndex[route.DestAirportId]
 			route.SourceAirportP = d.AirportsByIdIndex[route.SourceAirportId]
+			route.AirlineP = d.AirlinesByIdIndex[route.AirlineId]
+
 			if route.DestAirportP != nil {
 				route.DestAirportP.DestRoutes[route] = true
 			} else {

@@ -23,14 +23,13 @@ func ExampleDatabase() {
 	routes := db.RoutesByAirport(dus.Id)
 	for _,route := range routes {
 		if route.DestAirportId == dus.Id && route.SourceAirportId == jfk.Id {
-			fmt.Printf("%s -> %s, %d stops with %s\n",route.SourceAirportP.Name, route.DestAirportP.Name, route.Stops,route.Airline)
+			fmt.Printf("%s -> %s, %d stops with %s\n",route.SourceAirportP.Name, route.DestAirportP.Name, route.Stops,route.AirlineP.Name)
 
 		}
 	}
 
 	//Output:
 	//JFK is in: New York
-	//John F Kennedy Intl -> Dusseldorf, 0 stops with AB
-	//John F Kennedy Intl -> Dusseldorf, 0 stops with AA
-
+	//John F Kennedy Intl -> Dusseldorf, 0 stops with Air Berlin
+	//John F Kennedy Intl -> Dusseldorf, 0 stops with American Airlines
 }

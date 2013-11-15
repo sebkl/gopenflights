@@ -9,7 +9,7 @@ var jfk int
 
 func TestInitialize(t *testing.T) {
 	db = NewDatabase()
-	t.Logf("Record count: %d",(len(db.Routes) + len(db.Airports)))
+	t.Logf("Record count: %d",(len(db.Routes) + len(db.Airports) + len(db.Airlines)))
 }
 
 func TestAirportsByIATA( t *testing.T) {
@@ -18,7 +18,6 @@ func TestAirportsByIATA( t *testing.T) {
 		t.Errorf("JFK is in New York, nothing else :-/")
 	}
 }
-
 func TestRoutesByAirport( t *testing.T) {
 	all := db.RoutesByAirport(jfk)
 
@@ -39,3 +38,4 @@ func TestRoutesByAirport( t *testing.T) {
 	}
 	t.Logf("AirportId[%d] Incoming: %d, Outgoing: %d, Total: %d",jfk,lto,lfrom,lall)
 }
+
