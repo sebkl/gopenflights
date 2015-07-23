@@ -15,9 +15,10 @@ import(
 )
 
 const (
-	DefaultAirportDatUrl = "http://sourceforge.net/p/openflights/code/HEAD/tree/openflights/data/airports.dat?format=raw"
-	DefaultRoutesDatUrl = "http://sourceforge.net/p/openflights/code/HEAD/tree/openflights/data/routes.dat?format=raw"
-	DefaultAirlineDatUrl = "http://sourceforge.net/p/openflights/code/HEAD/tree/openflights/data/airlines.dat?format=raw"
+	DefaultBaseDatUrl = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/"
+	DefaultAirportDatUrl = DefaultBaseDatUrl + "airports.dat"
+	DefaultRoutesDatUrl = DefaultBaseDatUrl + "routes.dat"
+	DefaultAirlineDatUrl = DefaultBaseDatUrl + "airlines.dat"
 	DefaultCacheDir = "/tmp"
 	DefaultAirportsFilename = "airports.dat"
 	DefaultAirlinesFilename = "airlines.dat"

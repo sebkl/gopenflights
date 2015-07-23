@@ -1,6 +1,5 @@
 package gopenflights
 
-
 // AirportsGeo returns a list of all airport geo coordinates.
 // In addition to that it contains the amount of routes from/to this
 // airport are registered.
